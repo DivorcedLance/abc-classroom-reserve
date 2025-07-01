@@ -56,6 +56,7 @@ export function LoginForm() {
       if (data.session) {
         const { access_token, refresh_token } = data.session
         await supabase.auth.setSession({ access_token, refresh_token })
+        await supabase.auth.getSession()
       }
 
       toast({
