@@ -125,7 +125,7 @@ export function ReservationsPDF({ reservations }: { reservations: Reservation[] 
                   {format(new Date(r.start_datetime), "dd/MM/yyyy", { locale: es })}
                 </Text>
                 <Text style={styles.td}>
-                  {format(new Date(r.start_datetime), "HH:mm")} - {format(new Date(r.end_datetime), "HH:mm")}
+                  {formatTimeLiteral(r.start_datetime)} - {formatTimeLiteral(r.end_datetime)}
                 </Text>
                 <Text style={styles.td}>
                   {r.classroom?.name || "-"}
@@ -153,4 +153,8 @@ export function ReservationsPDF({ reservations }: { reservations: Reservation[] 
       </Page>
     </Document>
   )
+}
+
+function formatTimeLiteral(dateTimeStr: string) {
+  return dateTimeStr.slice(11, 16)
 }

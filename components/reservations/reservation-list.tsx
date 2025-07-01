@@ -15,6 +15,7 @@ import { supabase } from "@/lib/supabase"
 import { PDFDownloadLink, Document, Page, Text, View, StyleSheet, Font } from "@react-pdf/renderer"
 import { Download, BarChart3 } from "lucide-react"
 import { ReservationsPDF } from "./reservation-pdf"
+import { ReservationReportCard } from "./reservation-report-card"
 
 interface ReservationListProps {
   showAllReservations?: boolean
@@ -162,26 +163,7 @@ export function ReservationList({ showAllReservations = false }: ReservationList
   return (
     <div className="space-y-4">
       {showAllReservations && (
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Reportes</CardTitle>
-            <BarChart3 className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <PDFDownloadLink
-              document={<ReservationsPDF reservations={reservations} />}
-              fileName={`reporte_reservas_${format(new Date(), "yyyyMMdd_HHmmss")}.pdf`}
-              className="w-full"
-            >
-              {({ loading: pdfLoading }) => (
-                <Button size="sm" className="w-full" disabled={pdfLoading}>
-                  <Download className="mr-2 h-4 w-4" />
-                  {pdfLoading ? "Generando..." : "Generar Reporte"}
-                </Button>
-              )}
-            </PDFDownloadLink>
-          </CardContent>
-        </Card>
+        <ReservationReportCard reservations={reservations} />
       )}
       {reservations.map((reservation) => (
         <Card key={reservation.id}>
@@ -211,8 +193,7 @@ export function ReservationList({ showAllReservations = false }: ReservationList
                 </div>
                 <div className="flex items-center text-sm text-muted-foreground">
                   <Clock className="mr-2 h-4 w-4" />
-                  {format(new Date(reservation.start_datetime), "HH:mm")} -{" "}
-                  {format(new Date(reservation.end_datetime), "HH:mm")}
+                  {formatTimeLiteral(reservation.start_datetime)} - {formatTimeLiteral(reservation.end_datetime)}
                 </div>
                 <div className="flex items-center text-sm text-muted-foreground">
                   <MapPin className="mr-2 h-4 w-4" />
@@ -238,4 +219,8 @@ export function ReservationList({ showAllReservations = false }: ReservationList
       ))}
     </div>
   )
+}
+
+function formatTimeLiteral(dateTimeStr: string) {
+  return dateTimeStr.slice(11, 16)
 }
