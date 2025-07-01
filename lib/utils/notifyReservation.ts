@@ -53,7 +53,7 @@ export async function notifyReservationUser(
 
   // Envía el email
   return await resend.emails.send({
-    from: "Acme <onboarding@resend.dev>",
+    from: "Universidad ABC <onboarding@resend.dev>",
     to: reservation.user.email,
     subject,
     html,
