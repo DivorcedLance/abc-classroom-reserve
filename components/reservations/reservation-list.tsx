@@ -34,23 +34,23 @@ export function ReservationList({ showAllReservations = false }: ReservationList
   }, [user, showAllReservations])
 
   const fetchReservations = async () => {
+    if (!user) return
+
     try {
       setLoading(true)
 
-      // Try to get session first
-      const {
-        data: { session },
-        error: sessionError,
-      } = await supabase.auth.getSession()
-
-      if (sessionError || !session) {
-        throw new Error("No hay sesión activa")
+      // Obtener la sesión actual para el token
+      const { data: { session } } = await supabase.auth.getSession()
+      
+      if (!session?.access_token) {
+        throw new Error("No hay token de acceso")
       }
 
       const response = await fetch("/api/reservations", {
+        method: "GET",
         headers: {
-          Authorization: `Bearer ${session.access_token}`,
           "Content-Type": "application/json",
+          "Authorization": `Bearer ${session.access_token}`,
         },
       })
 
@@ -75,14 +75,18 @@ export function ReservationList({ showAllReservations = false }: ReservationList
 
   const cancelReservation = async (reservationId: string) => {
     try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession()
+      // Obtener la sesión actual para el token
+      const { data: { session } } = await supabase.auth.getSession()
+      
+      if (!session?.access_token) {
+        throw new Error("No hay token de acceso")
+      }
 
       const response = await fetch(`/api/reservations/${reservationId}`, {
         method: "DELETE",
         headers: {
-          Authorization: `Bearer ${session?.access_token}`,
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${session.access_token}`,
         },
       })
 
@@ -96,7 +100,6 @@ export function ReservationList({ showAllReservations = false }: ReservationList
       toast({
         title: "Reserva cancelada",
         description: "La reserva se ha cancelado exitosamente",
-        variant: "success",
       })
     } catch (error) {
       toast({

@@ -1,26 +1,31 @@
 "use client"
 
 import type React from "react"
-
-import { useEffect } from "react"
+import { useEffect, useRef } from "react"
 import { useAuthStore } from "@/store/auth-store"
 import { supabase } from "@/lib/supabase"
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { checkAuth, setUser, setLoading } = useAuthStore()
+  const initialized = useRef(false)
 
   useEffect(() => {
-    // Check initial auth state
-    checkAuth()
+    // Solo inicializar una vez
+    if (!initialized.current) {
+      initialized.current = true
+      console.log('AuthProvider: Initializing auth...')
+      checkAuth()
+    }
 
     // Listen for auth changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('Auth state changed:', event, session?.user?.id)
+      console.log('Auth state changed:', event)
       
       if (event === "SIGNED_IN" && session?.user) {
         try {
+          setLoading(true)
           const { data: profile, error } = await supabase
             .from("profiles")
             .select("*")
@@ -28,39 +33,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             .single()
 
           if (error) {
-            console.error("Error fetching profile:", error)
-            setUser(null)
+            console.error("Error fetching profile in AuthProvider:", error)
+            // No establecer user como null, mantener la sesión
+            console.log('🔍 AuthProvider: Error obteniendo perfil, pero manteniendo sesión')
           } else if (profile) {
             setUser(profile)
           }
         } catch (error) {
           console.error("Error in auth state change:", error)
           setUser(null)
+        } finally {
+          setLoading(false)
         }
       } else if (event === "SIGNED_OUT") {
         setUser(null)
-      } else if (event === "TOKEN_REFRESHED" && session?.user) {
-        // Refresh user profile data when token is refreshed
-        try {
-          const { data: profile, error } = await supabase
-            .from("profiles")
-            .select("*")
-            .eq("id", session.user.id)
-            .single()
-
-          if (!error && profile) {
-            setUser(profile)
-          }
-        } catch (error) {
-          console.error("Error refreshing profile:", error)
-        }
+        setLoading(false)
       }
-      
-      setLoading(false)
     })
 
     return () => subscription.unsubscribe()
-  }, [checkAuth, setUser, setLoading])
+  }, [checkAuth, setUser, setLoading]) // Dependencias específicas
 
   return <>{children}</>
 }

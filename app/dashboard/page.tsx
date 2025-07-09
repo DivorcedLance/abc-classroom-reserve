@@ -1,39 +1,81 @@
 "use client"
 
-import { useEffect } from "react"
+import { useAuth } from "@/hooks/use-auth"
 import { useRouter } from "next/navigation"
-import { useAuthStore } from "@/store/auth-store"
+import { useEffect, useState } from "react"
 import { Navbar } from "@/components/layout/navbar"
 import { ReservationForm } from "@/components/reservations/reservation-form"
 import { ReservationList } from "@/components/reservations/reservation-list"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Calendar, Clock, Users } from "lucide-react"
+import { Calendar, Clock, Users, AlertCircle } from "lucide-react"
+import { LoadingPage } from "@/components/ui/loading"
+import { Button } from "@/components/ui/button"
 
 export default function DashboardPage() {
-  const { user, loading } = useAuthStore()
+  const { user, loading, isAuthenticated } = useAuth()
   const router = useRouter()
+  const [authTimeout, setAuthTimeout] = useState(false)
 
   useEffect(() => {
-    if (!loading && !user) {
+    if (!loading && !isAuthenticated) {
       router.push("/auth/login")
     }
-  }, [user, loading, router])
+  }, [loading, isAuthenticated, router])
 
   useEffect(() => {
-    if (!loading && (user && user.role == "coordinador")) {
+    if (!loading && user?.role === "coordinador") {
       router.push("/admin")
     }
   }, [user, loading, router])
 
-  if (loading) {
+  // Timeout de seguridad para evitar carga infinita
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (loading) {
+        setAuthTimeout(true)
+      }
+    }, 15000) // 15 segundos
+
+    return () => clearTimeout(timer)
+  }, [loading])
+
+  if (authTimeout) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle className="flex items-center text-orange-600">
+              <AlertCircle className="mr-2 h-5 w-5" />
+              Problema de Conexión
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-gray-600">
+              La verificación de autenticación está tomando más tiempo del esperado.
+            </p>
+            <div className="flex gap-2">
+              <Button onClick={() => window.location.reload()} className="flex-1">
+                Recargar Página
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => router.push("/auth/login")}
+                className="flex-1"
+              >
+                Ir a Login
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     )
   }
 
-  if (!user) {
+  if (loading) {
+    return <LoadingPage message="Cargando dashboard..." />
+  }
+
+  if (!isAuthenticated || !user) {
     return null
   }
 

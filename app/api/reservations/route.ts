@@ -17,11 +17,12 @@ export async function GET(request: NextRequest) {
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return NextResponse.json({ error: "Token de autorización requerido" }, { status: 401 })
     }
+    
     const token = authHeader.replace("Bearer ", "")
     const supabase = createSupabaseClientWithAuth(token)
 
     // Get user (confirma que el token sea válido)
-    const { data: { user }, error: userError } = await supabase.auth.getUser(token)
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
     if (userError || !user) {
       return NextResponse.json({ error: "Token inválido" }, { status: 401 })
     }
@@ -92,11 +93,12 @@ export async function POST(request: NextRequest) {
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return NextResponse.json({ error: "Token de autorización requerido" }, { status: 401 })
     }
+    
     const token = authHeader.replace("Bearer ", "")
     const supabase = createSupabaseClientWithAuth(token)
 
     // Get user
-    const { data: { user }, error: userError } = await supabase.auth.getUser(token)
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
     if (userError || !user) {
       return NextResponse.json({ error: "Token inválido" }, { status: 401 })
     }

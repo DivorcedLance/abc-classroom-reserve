@@ -1,31 +1,28 @@
 "use client"
 
-import { useEffect } from "react"
-import { useRouter } from "next/navigation"
-import { useAuthStore } from "@/store/auth-store"
+import { useAuth } from "@/hooks/use-auth"
 import { Navbar } from "@/components/layout/navbar"
 import { ReservationList } from "@/components/reservations/reservation-list"
+import { LoadingPage } from "@/components/ui/loading"
+import { useRouter } from "next/navigation"
+import { useEffect } from "react"
 
 export default function ReservationsPage() {
-  const { user, loading } = useAuthStore()
+  const { user, loading, isAuthenticated } = useAuth()
   const router = useRouter()
 
   useEffect(() => {
-    if (!loading && !user) {
+    if (!loading && !isAuthenticated) {
       router.push("/auth/login")
     }
-  }, [user, loading, router])
+  }, [loading, isAuthenticated, router])
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    )
+    return <LoadingPage message="Verificando autenticación..." />
   }
 
-  if (!user) {
-    return null
+  if (!isAuthenticated || !user) {
+    return null // Se redirige en el useEffect
   }
 
   return (

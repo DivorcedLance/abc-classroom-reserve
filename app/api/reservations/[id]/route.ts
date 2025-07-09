@@ -7,16 +7,17 @@ export async function PUT(request: NextRequest, context: { params: { id: string 
     const { id } = context.params
     const body = await request.json()
 
-    // Auth
+    // Get token from header
     const authHeader = request.headers.get("authorization")
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return NextResponse.json({ error: "Token de autorización requerido" }, { status: 401 })
     }
+    
     const token = authHeader.replace("Bearer ", "")
     const supabase = createSupabaseClientWithAuth(token)
 
-    // User
-    const { data: { user }, error: userError } = await supabase.auth.getUser(token)
+    // Get user
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
     if (userError || !user) {
       return NextResponse.json({ error: "Token inválido" }, { status: 401 })
     }
@@ -75,16 +76,17 @@ export async function DELETE(request: NextRequest, context: { params: { id: stri
   try {
     const { id } = context.params
 
-    // Auth
+    // Get token from header
     const authHeader = request.headers.get("authorization")
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return NextResponse.json({ error: "Token de autorización requerido" }, { status: 401 })
     }
+    
     const token = authHeader.replace("Bearer ", "")
     const supabase = createSupabaseClientWithAuth(token)
 
-    // User
-    const { data: { user }, error: userError } = await supabase.auth.getUser(token)
+    // Get user
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
     if (userError || !user) {
       return NextResponse.json({ error: "Token inválido" }, { status: 401 })
     }

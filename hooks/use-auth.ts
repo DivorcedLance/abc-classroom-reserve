@@ -9,10 +9,8 @@ export function useAuthRedirect() {
   const router = useRouter()
 
   useEffect(() => {
-    if (!loading) {
-      if (!user) {
-        router.push('/auth/login')
-      }
+    if (!loading && !user) {
+      router.push('/auth/login')
     }
   }, [user, loading, router])
 
@@ -20,16 +18,36 @@ export function useAuthRedirect() {
 }
 
 export function useRequireAuth() {
-  const { user, loading } = useAuthStore()
+  const { user, loading, checkAuth } = useAuthStore()
   
   useEffect(() => {
-    // This will trigger auth check if not already done
-    useAuthStore.getState().checkAuth()
-  }, [])
+    // Solo verificar auth si no hay usuario y no está cargando
+    if (!user && !loading) {
+      checkAuth()
+    }
+  }, [user, loading, checkAuth])
 
   return {
     user,
     loading,
     isAuthenticated: !!user && !loading,
+  }
+}
+
+export function useAuth() {
+  const { user, loading, checkAuth } = useAuthStore()
+  
+  useEffect(() => {
+    // Verificar auth si no hay usuario y no está cargando
+    if (!user && !loading) {
+      checkAuth()
+    }
+  }, [user, loading, checkAuth])
+  
+  return {
+    user,
+    loading,
+    isAuthenticated: !!user,
+    isLoading: loading,
   }
 }
