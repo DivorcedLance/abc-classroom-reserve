@@ -1,11 +1,12 @@
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
 import { supabase } from "@/lib/supabase"
-import type { Profile } from "@/lib/types"
+import type { Profile, UserRole } from "@/lib/types"
 
 interface AuthState {
   user: Profile | null
   loading: boolean
+  initialized: boolean
   setUser: (user: Profile | null) => void
   setLoading: (loading: boolean) => void
   signOut: () => Promise<void>
@@ -18,6 +19,7 @@ export const useAuthStore = create<AuthState>()(
     (set, get) => ({
       user: null,
       loading: true,
+      initialized: false,
 
       setUser: (user) => set({ user }),
       setLoading: (loading) => set({ loading }),
@@ -33,6 +35,14 @@ export const useAuthStore = create<AuthState>()(
       },
 
       checkAuth: async () => {
+        const state = get()
+        
+        // Evitar múltiples llamadas simultáneas
+        if (state.loading) {
+          console.log('🔍 checkAuth: Ya hay una verificación en progreso, saltando...')
+          return
+        }
+
         try {
           console.log('🔍 checkAuth: Iniciando verificación...')
           set({ loading: true })
@@ -45,7 +55,7 @@ export const useAuthStore = create<AuthState>()(
 
           if (sessionError) {
             console.error("❌ Session error:", sessionError)
-            set({ user: null, loading: false })
+            set({ user: null, loading: false, initialized: true })
             return
           }
 
@@ -57,36 +67,75 @@ export const useAuthStore = create<AuthState>()(
 
           if (session?.user) {
             console.log('🔍 checkAuth: Obteniendo perfil para usuario:', session.user.id)
-            const { data: profile, error: profileError } = await supabase
-              .from("profiles")
-              .select("*")
-              .eq("id", session.user.id)
-              .single()
+            
+            try {
+              // Agregar timeout más corto a la consulta de perfil
+              console.log('🔍 checkAuth: Iniciando consulta a profiles...')
+              
+              const profilePromise = supabase
+                .from("profiles")
+                .select("*")
+                .eq("id", session.user.id)
+                .single()
 
-            if (profileError) {
-              console.error("❌ Profile fetch error:", profileError)
-              console.log('🔍 checkAuth: Error obteniendo perfil, pero manteniendo sesión')
-              // No cerrar la sesión automáticamente, solo logguear el error
-              // El usuario puede seguir autenticado aunque no tengamos su perfil completo
-              set({ user: null, loading: false })
-              return
-            }
+              const timeoutPromise = new Promise((_, reject) => 
+                setTimeout(() => reject(new Error('Profile query timeout')), 3000)
+              )
 
-            if (profile) {
-              console.log('✅ checkAuth: Perfil obtenido:', profile.email)
-              set({ user: profile, loading: false })
-            } else {
-              console.log('❌ checkAuth: No se encontró perfil')
-              set({ user: null, loading: false })
+              console.log('🔍 checkAuth: Esperando respuesta de profiles...')
+              const { data: profile, error: profileError } = await Promise.race([
+                profilePromise,
+                timeoutPromise
+              ]) as any
+
+              console.log('🔍 checkAuth: Respuesta recibida:', { profile: !!profile, error: !!profileError })
+
+              if (profileError) {
+                console.error("❌ Profile fetch error:", profileError)
+                console.log('🔍 checkAuth: Error obteniendo perfil, pero manteniendo sesión')
+                // Crear un perfil temporal basado en los datos de auth
+                const tempProfile: Profile = {
+                  id: session.user.id,
+                  email: session.user.email!,
+                  full_name: session.user.user_metadata?.full_name || session.user.email,
+                  role: 'docente' as UserRole, // Usar un role válido
+                  created_at: new Date().toISOString(),
+                  updated_at: new Date().toISOString()
+                }
+                console.log('🔍 checkAuth: Usando perfil temporal:', tempProfile)
+                set({ user: tempProfile, loading: false, initialized: true })
+                return
+              }
+
+              if (profile) {
+                console.log('✅ checkAuth: Perfil obtenido:', profile.email)
+                set({ user: profile, loading: false, initialized: true })
+              } else {
+                console.log('❌ checkAuth: No se encontró perfil')
+                set({ user: null, loading: false, initialized: true })
+              }
+            } catch (error) {
+              console.error("❌ Error en consulta de perfil:", error)
+              // Si falla la consulta, usar datos del auth
+              const tempProfile: Profile = {
+                id: session.user.id,
+                email: session.user.email!,
+                full_name: session.user.user_metadata?.full_name || session.user.email,
+                role: 'docente' as UserRole,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+              }
+              console.log('🔍 checkAuth: Usando perfil temporal por error:', tempProfile)
+              set({ user: tempProfile, loading: false, initialized: true })
             }
           } else {
             console.log('🔍 checkAuth: No hay sesión activa')
-            set({ user: null, loading: false })
+            set({ user: null, loading: false, initialized: true })
           }
           
         } catch (error) {
           console.error("❌ Error checking auth:", error)
-          set({ user: null, loading: false })
+          set({ user: null, loading: false, initialized: true })
         }
       },
 
@@ -116,6 +165,7 @@ export const useAuthStore = create<AuthState>()(
       name: "auth-storage",
       partialize: (state) => ({ 
         user: state.user,
+        initialized: state.initialized,
         // No persistir loading state
       }),
       onRehydrateStorage: () => (state) => {

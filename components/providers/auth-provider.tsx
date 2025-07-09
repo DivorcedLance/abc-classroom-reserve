@@ -6,13 +6,13 @@ import { useAuthStore } from "@/store/auth-store"
 import { supabase } from "@/lib/supabase"
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const { checkAuth, setUser, setLoading } = useAuthStore()
-  const initialized = useRef(false)
+  const { checkAuth, setUser, setLoading, initialized } = useAuthStore()
+  const providerInitialized = useRef(false)
 
   useEffect(() => {
-    // Solo inicializar una vez
-    if (!initialized.current) {
-      initialized.current = true
+    // Solo inicializar una vez si el store no se ha inicializado
+    if (!providerInitialized.current && !initialized) {
+      providerInitialized.current = true
       console.log('AuthProvider: Initializing auth...')
       checkAuth()
     }
@@ -52,7 +52,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     })
 
     return () => subscription.unsubscribe()
-  }, [checkAuth, setUser, setLoading]) // Dependencias específicas
+  }, [checkAuth, setUser, setLoading, initialized]) // Agregamos initialized a las dependencias
 
   return <>{children}</>
 }

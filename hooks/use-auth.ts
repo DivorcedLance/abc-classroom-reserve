@@ -18,14 +18,15 @@ export function useAuthRedirect() {
 }
 
 export function useRequireAuth() {
-  const { user, loading, checkAuth } = useAuthStore()
+  const { user, loading, initialized, checkAuth } = useAuthStore()
   
   useEffect(() => {
-    // Solo verificar auth si no hay usuario y no está cargando
-    if (!user && !loading) {
+    // Solo verificar auth si no se ha inicializado y no está cargando
+    if (!initialized && !loading) {
+      console.log('🔍 useRequireAuth: Calling checkAuth because not initialized')
       checkAuth()
     }
-  }, [user, loading, checkAuth])
+  }, [initialized, loading, checkAuth])
 
   return {
     user,
@@ -35,14 +36,15 @@ export function useRequireAuth() {
 }
 
 export function useAuth() {
-  const { user, loading, checkAuth } = useAuthStore()
+  const { user, loading, initialized, checkAuth } = useAuthStore()
   
   useEffect(() => {
-    // Verificar auth si no hay usuario y no está cargando
-    if (!user && !loading) {
+    // Solo verificar auth si no se ha inicializado y no está cargando
+    if (!initialized && !loading) {
+      console.log('🔍 useAuth: Calling checkAuth because not initialized')
       checkAuth()
     }
-  }, [user, loading, checkAuth])
+  }, [initialized, loading, checkAuth])
   
   return {
     user,
