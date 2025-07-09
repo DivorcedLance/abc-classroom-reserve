@@ -115,8 +115,6 @@ export function ReservationList({ showAllReservations = false }: ReservationList
     const isFuture = startTime > now
     const isActive = reservation.status === "active"
 
-    console.log(`Checking reservation ${reservation.id}: isActive=${isActive}, isFuture=${isFuture}, isOwner=${isOwner}, isCoordinator=${isCoordinator}`)
-
     return isActive && isFuture && (isOwner || isCoordinator)
   }
 
