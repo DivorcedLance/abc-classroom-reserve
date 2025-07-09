@@ -19,12 +19,6 @@ export default function DashboardPage() {
     }
   }, [user, loading, router])
 
-  useEffect(() => {
-    if (!loading && (user && user.role == "coordinador")) {
-      router.push("/admin")
-    }
-  }, [user, loading, router])
-
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">

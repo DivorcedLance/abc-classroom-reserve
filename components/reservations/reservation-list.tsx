@@ -115,6 +115,8 @@ export function ReservationList({ showAllReservations = false }: ReservationList
     const isFuture = startTime > now
     const isActive = reservation.status === "active"
 
+    console.log(`Checking reservation ${reservation.id}: isActive=${isActive}, isFuture=${isFuture}, isOwner=${isOwner}, isCoordinator=${isCoordinator}`)
+
     return isActive && isFuture && (isOwner || isCoordinator)
   }
 
@@ -180,7 +182,7 @@ export function ReservationList({ showAllReservations = false }: ReservationList
                     <X className="h-4 w-4 mr-1" />
                     Cancelar
                   </Button>
-                )}
+                )}|
               </div>
             </div>
           </CardHeader>

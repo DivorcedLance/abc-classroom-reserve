@@ -16,12 +16,6 @@ export default function ReservationsPage() {
     }
   }, [user, loading, router])
 
-  useEffect(() => {
-    if (!loading && (user && user.role == "coordinador")) {
-      router.push("/admin")
-    }
-  }, [user, loading, router])
-
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -40,7 +34,9 @@ export default function ReservationsPage() {
 
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Mis Reservas</h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            {user.role === "docente" ? "Mis Reservas" : "Reservas"}
+          </h1>
           <p className="text-gray-600">Gestiona todas tus reservas de aulas</p>
         </div>
 

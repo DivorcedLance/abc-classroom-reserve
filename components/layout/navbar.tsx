@@ -27,32 +27,30 @@ export function Navbar() {
           </Link>
 
           <div className="hidden md:flex items-center space-x-4">
-            {user.role === "docente" && (
-              <>
-                <Link href="/dashboard">
-                  <Button variant="ghost" size="sm">
-                    <Calendar className="mr-2 h-4 w-4" />
-                    Dashboard
-                  </Button>
-                </Link>
-
-                <Link href="/reservations">
-                  <Button variant="ghost" size="sm">
-                    <Calendar className="mr-2 h-4 w-4" />
-                    Mis Reservas
-                  </Button>
-                </Link>
-              </>
-            )}
-
-            {user.role === "coordinador" && (
-              <Link href="/admin">
+            <>
+              <Link href="/dashboard">
                 <Button variant="ghost" size="sm">
-                  <BarChart3 className="mr-2 h-4 w-4" />
-                  Administración
+                  <Calendar className="mr-2 h-4 w-4" />
+                  Dashboard
                 </Button>
               </Link>
-            )}
+
+              <Link href="/reservations">
+                <Button variant="ghost" size="sm">
+                  <Calendar className="mr-2 h-4 w-4" />
+                  {user.role === "docente" ? "Mis Reservas" : "Reservas"}
+                </Button>
+              </Link>
+
+              {user.role === "coordinador" && (
+                <Link href="/admin">
+                  <Button variant="ghost" size="sm">
+                    <BarChart3 className="mr-2 h-4 w-4" />
+                    Administración
+                  </Button>
+                </Link>
+              )}
+            </>
           </div>
         </div>
 
