@@ -172,7 +172,10 @@ export function ReservationForm() {
                 id="date"
                 type="date"
                 value={formData.date}
-                onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                onChange={(e) => {
+                  setFormData({ ...formData, date: e.target.value, classroom_id: "" })
+                  setAvailableClassrooms([])
+                }}
                 min={new Date().toISOString().split("T")[0]}
                 required
               />
@@ -183,7 +186,10 @@ export function ReservationForm() {
                 id="start_time"
                 type="time"
                 value={formData.start_time}
-                onChange={(e) => setFormData({ ...formData, start_time: e.target.value })}
+                onChange={(e) => {
+                  setFormData({ ...formData, start_time: e.target.value, classroom_id: "" })
+                  setAvailableClassrooms([])
+                }}
                 required
               />
             </div>
@@ -193,7 +199,10 @@ export function ReservationForm() {
                 id="end_time"
                 type="time"
                 value={formData.end_time}
-                onChange={(e) => setFormData({ ...formData, end_time: e.target.value })}
+                onChange={(e) => {
+                  setFormData({ ...formData, end_time: e.target.value, classroom_id: "" })
+                  setAvailableClassrooms([])
+                }}
                 required
               />
             </div>
