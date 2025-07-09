@@ -31,41 +31,39 @@ export function LoginForm() {
     try {
       const validatedData = loginSchema.parse(formData)
 
-      const response = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(validatedData),
+      // Use Supabase client directly for authentication
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: validatedData.email,
+        password: validatedData.password,
       })
 
-      // Check if response is JSON
-      const contentType = response.headers.get("content-type")
-      if (!contentType || !contentType.includes("application/json")) {
-        throw new Error("El servidor devolvió una respuesta inválida")
+      if (error) {
+        throw new Error(error.message)
       }
 
-      const data = await response.json()
+      if (data.user && data.session) {
+        // Get user profile
+        const { data: profile, error: profileError } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", data.user.id)
+          .single()
 
-      if (!response.ok) {
-        throw new Error(data.error || "Error al iniciar sesión")
+        if (profileError) {
+          console.error("Profile fetch error:", profileError)
+          throw new Error("Error al obtener el perfil del usuario")
+        }
+
+        // Update the auth store
+        setUser(profile)
+
+        toast({
+          title: "Inicio de sesión exitoso",
+          description: `Bienvenido, ${profile.full_name || profile.email}`,
+        })
+
+        router.push("/dashboard")
       }
-
-      setUser(data.user)
-
-      if (data.session) {
-        const { access_token, refresh_token } = data.session
-        await supabase.auth.setSession({ access_token, refresh_token })
-        await supabase.auth.getSession()
-      }
-
-      toast({
-        title: "Inicio de sesión exitoso",
-        description: `Bienvenido, ${data.user.full_name || data.user.email}`,
-        variant: "success",
-      })
-
-      router.push("/dashboard")
     } catch (error) {
       console.error("Login error:", error)
       toast({

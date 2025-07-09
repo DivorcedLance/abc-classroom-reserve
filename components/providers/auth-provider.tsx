@@ -17,15 +17,45 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('Auth state changed:', event, session?.user?.id)
+      
       if (event === "SIGNED_IN" && session?.user) {
-        const { data: profile } = await supabase.from("profiles").select("*").eq("id", session.user.id).single()
+        try {
+          const { data: profile, error } = await supabase
+            .from("profiles")
+            .select("*")
+            .eq("id", session.user.id)
+            .single()
 
-        if (profile) {
-          setUser(profile)
+          if (error) {
+            console.error("Error fetching profile:", error)
+            setUser(null)
+          } else if (profile) {
+            setUser(profile)
+          }
+        } catch (error) {
+          console.error("Error in auth state change:", error)
+          setUser(null)
         }
       } else if (event === "SIGNED_OUT") {
         setUser(null)
+      } else if (event === "TOKEN_REFRESHED" && session?.user) {
+        // Refresh user profile data when token is refreshed
+        try {
+          const { data: profile, error } = await supabase
+            .from("profiles")
+            .select("*")
+            .eq("id", session.user.id)
+            .single()
+
+          if (!error && profile) {
+            setUser(profile)
+          }
+        } catch (error) {
+          console.error("Error refreshing profile:", error)
+        }
       }
+      
       setLoading(false)
     })
 

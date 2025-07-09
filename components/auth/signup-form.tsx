@@ -50,7 +50,6 @@ export function SignupForm() {
       toast({
         title: "Registro exitoso",
         description: data.message,
-        variant: "success",
       })
 
       // Reset form

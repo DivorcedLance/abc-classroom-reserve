@@ -31,10 +31,29 @@ export const useAuthStore = create<AuthState>()(
           set({ loading: true })
           const {
             data: { session },
+            error: sessionError,
           } = await supabase.auth.getSession()
 
+          if (sessionError) {
+            console.error("Session error:", sessionError)
+            set({ user: null })
+            return
+          }
+
           if (session?.user) {
-            const { data: profile } = await supabase.from("profiles").select("*").eq("id", session.user.id).single()
+            const { data: profile, error: profileError } = await supabase
+              .from("profiles")
+              .select("*")
+              .eq("id", session.user.id)
+              .single()
+
+            if (profileError) {
+              console.error("Profile fetch error:", profileError)
+              // If profile doesn't exist, sign out the user
+              await supabase.auth.signOut()
+              set({ user: null })
+              return
+            }
 
             if (profile) {
               set({ user: profile })
