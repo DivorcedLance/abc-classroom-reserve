@@ -180,7 +180,7 @@ export function ReservationList({ showAllReservations = false }: ReservationList
                     <X className="h-4 w-4 mr-1" />
                     Cancelar
                   </Button>
-                )}|
+                )}
               </div>
             </div>
           </CardHeader>
